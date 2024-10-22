@@ -1,4 +1,7 @@
 const fs = require("fs");
+const {
+  config
+} = require("process");
 
 async function generateJsonDB() {
   try {
@@ -9,7 +12,36 @@ async function generateJsonDB() {
 
     const pokemonApiURL = "https://pokeapi.co/api/v2/pokemon/?limit=100";
     const pokemonList = await fetch(pokemonApiURL).then((res) => res.json());
-    console.log(pokemonList);
+    const payload = [];
+    for (let i = 0; i < pokemonList.results.length; i++) {
+      const pokemon = pokemonList.results[i];
+      const detail = await fetch(pokemon.url).then((res) => res.json());
+      const species = await fetch(detail.species.url).then((res) => res.json());
+      const evo = await fetch(species.evolution_chain.url).then((res) => res.json());
+
+      const evolutionChains = [evo.chain.species.name];
+      let evolveTo = evo.chain.evolves_to[0];
+      while (evolveTo) {
+        evolutionChains.push(evolveTo.species.name);
+        evolveTo = evolveTo.evolves_to[0];
+      }
+      const item = {
+        id: detail.id,
+        name: pokemon.name,
+        height: detail.height,
+        weight: detail.weight,
+        cries: detail.cries,
+        abilities: detail.abilities.map((ab) => ab.ability.name),
+        types: detail.types.map((ab) => ab.type.name),
+        evolutionChains,
+      }
+      payload.push(item);
+      console.log(detail);
+    }
+    console.log(payload);
+    fs.writeFileSync("./db.json", JSON.stringify({
+      pokemon: payload
+    }, null, 2), "utf8");
   } catch (error) {
     console.error(error);
   }
