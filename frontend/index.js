@@ -54,7 +54,7 @@ function PokemonList() {
   if (pokemonData.length === 0) {
     return React.createElement(
       "p", {
-        className: "text-center text-lg text-gray-700"
+        className: "text-center text-lg text-white"
       }, // styling pesan loading
       "Loading Pokemon data..."
     );
